@@ -10,7 +10,6 @@ const zhenAiUrl string = "https://www.zhenai.com/zhenghun"
 
 const shanghaiUrl string = "https://www.zhenai.com/zhenghun/shanghai"
 
-
 func main() {
 
 	//concurrentEngine := engine.ConcurrentEngine{
@@ -19,17 +18,17 @@ func main() {
 	//}
 
 	concurrentEngine := engine.ConcurrentEngine{
-		Scheduler: &scheduler.QueuedScheduler{},
+		Scheduler:   &scheduler.QueuedScheduler{},
 		WorkerCount: 100,
 	}
 
-	//concurrentEngine.Run(engine.Request{
-	//	Url:		 zhenAiUrl,
-	//	ParserFunc:  parser.ParseCityList,
-	//})
-
 	concurrentEngine.Run(engine.Request{
-		Url:		 shanghaiUrl,
-		ParserFunc:  parser.ParseCity,
+		Url:        zhenAiUrl,
+		ParserFunc: parser.ParseCityList,
 	})
+
+	//concurrentEngine.Run(engine.Request{
+	//	Url:		 shanghaiUrl,
+	//	ParserFunc:  parser.ParseCity,
+	//})
 }

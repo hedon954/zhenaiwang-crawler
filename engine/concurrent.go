@@ -6,17 +6,16 @@ import (
 )
 
 /**
-	并发版爬虫引擎
- */
-
+并发版爬虫引擎
+*/
 
 type ConcurrentEngine struct {
-	Scheduler Scheduler
+	Scheduler   Scheduler
 	WorkerCount int
 }
 
 type Scheduler interface {
-	ReadyNotifier  			//接口组合
+	ReadyNotifier //接口组合
 	Submit(Request)
 	WorkChan() chan Request //问 Scheduler：我有一个 Worker，请问要给我哪个 channel
 	Run()
@@ -27,7 +26,7 @@ type ReadyNotifier interface {
 }
 
 //并发执行爬虫
-func (e *ConcurrentEngine) Run(seeds ...Request)  {
+func (e *ConcurrentEngine) Run(seeds ...Request) {
 
 	//创建输入通道
 	//in := make(chan Request)
@@ -37,22 +36,27 @@ func (e *ConcurrentEngine) Run(seeds ...Request)  {
 	out := make(chan ParseResult)
 
 	//创建 Worker 去执行爬虫操作
-	for i:=0; i< e.WorkerCount; i++ {
+	for i := 0; i < e.WorkerCount; i++ {
 		createWorker(e.Scheduler.WorkChan(), out, e.Scheduler)
 	}
 
 	//提交任务
-	for _,r := range seeds{
+	for _, r := range seeds {
+		//对 URL 进行去重
+		if isDuplicate(r) {
+			log.Printf("Duplicate request: %s\n", r.Url)
+			continue
+		}
 		e.Scheduler.Submit(r)
 	}
 
 	//处理结果
 	itemIndex := 1
-	for{
+	for {
 		//从 channel 拿到 Worker 处理的结果
-		result := <- out
+		result := <-out
 		//输出爬取到的信息
-		for _,item := range result.Items{
+		for _, item := range result.Items {
 			switch item.(type) {
 			case model.Profile:
 				log.Printf("=========== Got item %d ===========\n", itemIndex)
@@ -65,9 +69,26 @@ func (e *ConcurrentEngine) Run(seeds ...Request)  {
 		}
 
 		//继续处理新的请求
-		for _,request := range result.Requests{
+		for _, request := range result.Requests {
+			//对 URL 进行去重
+			if isDuplicate(request) {
+				//log.Printf("Duplicate request: %s\n", request.Url)
+				continue
+			}
 			e.Scheduler.Submit(request)
 		}
+	}
+}
+
+//判断 Request 是否重复
+var visitedUrls = make(map[string]bool)
+
+func isDuplicate(request Request) bool {
+	if visitedUrls[request.Url] {
+		return true
+	} else {
+		visitedUrls[request.Url] = true
+		return false
 	}
 }
 
@@ -78,10 +99,10 @@ func (e *ConcurrentEngine) Run(seeds ...Request)  {
 func createWorker(in chan Request, out chan ParseResult, ready ReadyNotifier) {
 	//每个 worker 有一个自己的 channel
 	go func() {
-		for  {
+		for {
 			//在将 in 传进 channel 之前要告诉它我已经准备好了
 			ready.WorkerReady(in)
-			request :=  <- in
+			request := <-in
 			result, err := worker(request)
 			if err != nil {
 				continue
@@ -90,4 +111,3 @@ func createWorker(in chan Request, out chan ParseResult, ready ReadyNotifier) {
 		}
 	}()
 }
-
