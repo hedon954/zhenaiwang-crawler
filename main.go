@@ -2,6 +2,7 @@ package main
 
 import (
 	"zhenaiwang-crawler/engine"
+	"zhenaiwang-crawler/persist"
 	"zhenaiwang-crawler/scheduler"
 	"zhenaiwang-crawler/zhenai/parser"
 )
@@ -12,14 +13,10 @@ const shanghaiUrl string = "https://www.zhenai.com/zhenghun/shanghai"
 
 func main() {
 
-	//concurrentEngine := engine.ConcurrentEngine{
-	//	Scheduler: &scheduler.QueuedScheduler{},
-	//	WorkerCount: 10,
-	//}
-
 	concurrentEngine := engine.ConcurrentEngine{
 		Scheduler:   &scheduler.QueuedScheduler{},
 		WorkerCount: 100,
+		ItemChan:    persist.ItemSaver(),
 	}
 
 	concurrentEngine.Run(engine.Request{

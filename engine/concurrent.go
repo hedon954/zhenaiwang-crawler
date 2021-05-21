@@ -2,7 +2,6 @@ package engine
 
 import (
 	"log"
-	"zhenaiwang-crawler/model"
 )
 
 /**
@@ -12,6 +11,7 @@ import (
 type ConcurrentEngine struct {
 	Scheduler   Scheduler
 	WorkerCount int
+	ItemChan    chan interface{}
 }
 
 type Scheduler interface {
@@ -51,21 +51,15 @@ func (e *ConcurrentEngine) Run(seeds ...Request) {
 	}
 
 	//处理结果
-	itemIndex := 1
 	for {
 		//从 channel 拿到 Worker 处理的结果
 		result := <-out
 		//输出爬取到的信息
 		for _, item := range result.Items {
-			switch item.(type) {
-			case model.Profile:
-				log.Printf("=========== Got item %d ===========\n", itemIndex)
-				profile := item.(model.Profile)
-				profile.PrintProfile()
-			default:
-				log.Printf("Got item %d: %v\n", itemIndex, item)
-			}
-			itemIndex++
+			//扔到 ItemSaver 去保存信息
+			go func() {
+				e.ItemChan <- item
+			}()
 		}
 
 		//继续处理新的请求

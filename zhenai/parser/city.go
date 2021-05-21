@@ -102,7 +102,7 @@ func ParseCity(contents []byte) engine.ParseResult {
 		} else {
 			break
 		}
-		if i < len(avatarMatches) {
+		if i < len(ageMatches) {
 			profile.Age = string(ageMatches[i][1]) //Age
 		} else {
 			break
@@ -133,11 +133,11 @@ func ParseCity(contents []byte) engine.ParseResult {
 			break
 		}
 		profile.Url = "http://album.zhenai.com/u/" + string(m[1])
-		if string(genderMatches[i][1]) == "男士" {
+		if string(genderMatches[i][1]) == "男士" && salaryI < len(salaryMatches) {
 			//男的有月薪
 			profile.Income = string(salaryMatches[salaryI][1])
 			salaryI++
-		} else {
+		} else if string(genderMatches[i][1]) == "女士" && educationI < len(educationMatches) {
 			//女的有学历
 			profile.Education = string(educationMatches[educationI][1])
 			educationI++
@@ -145,11 +145,12 @@ func ParseCity(contents []byte) engine.ParseResult {
 		//用户信息
 		result.Items = append(result.Items, profile)
 		//用户 URL
-		result.Requests = append(result.Requests,
-			engine.Request{
-				Url:        "http://album.zhenai.com/u/" + string(m[1]),
-				ParserFunc: engine.NilParser,
-			})
+		//TODO: 这里会有 202 反爬虫异常，解决措施后面找
+		//result.Requests = append(result.Requests,
+		//	engine.Request{
+		//		Url:        "http://album.zhenai.com/u/" + string(m[1]),
+		//		ParserFunc: engine.NilParser,
+		//	})
 	}
 
 	//放入下一页的链接
