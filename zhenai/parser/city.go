@@ -2,6 +2,7 @@ package parser
 
 import (
 	"regexp"
+	"strconv"
 	"zhenaiwang-crawler/engine"
 	"zhenaiwang-crawler/model"
 )
@@ -23,7 +24,7 @@ const genderRegex string = `<td width="180"><span class="grayL">性别：</span>
 const livePlaceRegex string = `<td><span class="grayL">居住地：</span>([^<]+)</td>`
 
 //<td width="180"><span class="grayL">年龄：</span>37</td>
-const ageRegex string = `<td width="180"><span class="grayL">年龄：</span>([^<]+)</td>`
+const ageRegex string = `<td width="180"><span class="grayL">年龄：</span>([\d]+)</td>`
 
 //<td><span class="grayL">月   薪：</span>12001-20000元</td>
 const salaryRegex string = `<td><span class="grayL">月[^薪]*薪：</span>([^<]+)</td>`
@@ -35,7 +36,7 @@ const educationRegex string = `<td><span class="grayL">学[^历]*历：</span>([
 const marriageRegex string = `<tr><td width="180"><span class="grayL">婚况：</span>([^<]+)</td>`
 
 //<td width="180"><span class="grayL">身   高：</span>162</td>
-const heightRegex string = `<td width="180"><span class="grayL">身[^高]*高：</span>([^<]+)</td>`
+const heightRegex string = `<td width="180"><span class="grayL">身[^高]*高：</span>([\d]+)</td>`
 
 //<div class="introduce">一直以来习惯了强大，才发现会哭的孩子才有糖吃</div>
 const introductionRegex string = `</table>[^<]*<div class="introduce">([^<]+)</div>`
@@ -103,12 +104,22 @@ func ParseCity(contents []byte) engine.ParseResult {
 			break
 		}
 		if i < len(ageMatches) {
-			profile.Age = string(ageMatches[i][1]) //Age
+			age, err := strconv.Atoi(string(ageMatches[i][1]))
+			if err == nil {
+				profile.Age = age //Age
+			} else {
+				continue
+			}
 		} else {
 			break
 		}
 		if i < len(heightMatches) {
-			profile.Height = string(heightMatches[i][1]) //Height
+			height, err := strconv.Atoi(string(heightMatches[i][1])) //Height
+			if err == nil {
+				profile.Height = height
+			} else {
+				continue
+			}
 		} else {
 			break
 		}
